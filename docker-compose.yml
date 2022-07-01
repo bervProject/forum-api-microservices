@@ -9,9 +9,31 @@ services:
       - redis-data:/data
     networks:
       - backend
+  mongodb:
+    image: mongo:5
+    networks:
+      - backend
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secretpass
+  mongo-express:
+    image: mongo-express:latest
+    networks:
+      - backend
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: secretpass
+      ME_CONFIG_MONGODB_URL: mongodb://root:secretpass@mongo:27017/
 
 volumes:
   redis-data:
+  mongo-data:
 
 networks:
   backend:
