@@ -1,11 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using UserService.Model;
 using UserService.Repository;
+using UserService.Service;
+using Redis.OM;
+using UserService.HostedServices;
 
 var builder = WebApplication.CreateBuilder(args);
+// Add services to the container.
+builder.Services.AddSingleton(new RedisConnectionProvider(builder.Configuration["RedisConnectionString"]));
 builder.Services.Configure<ForumApiDatabaseSettings>(builder.Configuration.GetSection("ForumApiDatabase"));
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
-// Add services to the container.
+builder.Services.AddScoped<IUserServices, UserServices>();
+builder.Services.AddHostedService<IndexCreationService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -22,54 +28,64 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 
-app.MapGet("/users", async ([FromServices] IUserRepository userRepository) =>
+app.MapGet("/users", async ([FromServices] IUserServices userServices) =>
 {
-    return await userRepository.GetUsers();
+    return await userServices.GetUsers();
 })
 .WithName("GetUsers");
 
-app.MapPost("/users", async ([FromServices] IUserRepository userRepository, [FromBody] Users user) =>
+app.MapGet("/users/{id}", async ([FromServices] IUserServices userServices, Guid id) =>
 {
-    var existing = await userRepository.GetUserByEmail(user.Email);
-    if (existing != null) {
-        return Results.BadRequest(new {Message = "User Exists"});
+    return await userServices.GetUserById(id);
+})
+.WithName("GetUserById");
+
+app.MapGet("/userByEmail/{email}", async ([FromServices] IUserServices userServices, string email) =>
+{
+    return await userServices.GetUserByEmail(email);
+})
+.WithName("GetUserByEmail");
+
+app.MapPost("/users", async ([FromServices] IUserServices userServices, [FromBody] Users user) =>
+{
+    var createdUser = await userServices.NewUser(user);
+    if (createdUser == null)
+    {
+        return Results.BadRequest(new { Message = "User Exists" });
     }
-    var createdId = await userRepository.NewUser(user);
-    return Results.Json(new { Message = "Created", UserId = createdId });
+    return Results.Json(new { Message = "Created", User = createdUser });
 })
 .WithName("CreateUser");
 
-app.MapPut("/users", async ([FromServices] IUserRepository userRepository, [FromBody] UserUpdate user) =>
+app.MapPut("/users", async ([FromServices] IUserServices userServices, [FromBody] UserUpdate user) =>
 {
-    var existing = await userRepository.GetUserById(user.Id);
-    if (existing == null) {
-        return Results.NotFound(new {Message = "User Not Found"});
+    var result = await userServices.UpdateUser(user.Id, user);
+    if (result == null)
+    {
+        return Results.NotFound(new { Message = "User Not Found" });
     }
-    existing.Name = user.Name;
-    await userRepository.UpdateUser(user.Id, existing);
-    return Results.Json(new { Message = "Updated" });
+    return Results.Json(new { Message = "Updated", User = result });
 })
 .WithName("UpdateUser");
 
-app.MapPut("/users/password", async ([FromServices] IUserRepository userRepository, [FromBody] UserPassword user) =>
+app.MapPut("/users/password", async ([FromServices] IUserServices userServices, [FromBody] UserPassword user) =>
 {
-    var existing = await userRepository.GetUserById(user.Id);
-    if (existing == null) {
-        return Results.NotFound(new {Message = "User Not Found"});
+    var result = await userServices.UpdateUserPassword(user.Id, user);
+    if (result == null)
+    {
+        return Results.NotFound(new { Message = "User Not Found" });
     }
-    existing.Password = user.Password;
-    await userRepository.UpdateUserPassword(user.Id, existing);
-    return Results.Json(new { Message = "Updated" });
+    return Results.Json(new { Message = "Updated", User = result });
 })
 .WithName("UpdateUserPassword");
 
-app.MapDelete("/users", async ([FromServices] IUserRepository userRepository, [FromBody] ById data) =>
+app.MapDelete("/users", async ([FromServices] IUserServices userServices, [FromBody] ById data) =>
 {
-    var existing = await userRepository.GetUserById(data.Id);
-    if (existing == null) {
-        return Results.NotFound(new {Message = "User Not Found"});
+    var result = await userServices.DeleteUser(data.Id);
+    if (!result)
+    {
+        return Results.NotFound(new { Message = "User Not Found" });
     }
-    await userRepository.DeleteUser(data.Id);
     return Results.Json(new { Message = "Deleted" });
 })
 .WithName("DeleteUser");

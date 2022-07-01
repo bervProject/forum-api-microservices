@@ -5,7 +5,6 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Isopoh.Cryptography.Argon2;
 
-
 public class UserRepository : IUserRepository
 {
 
@@ -23,40 +22,50 @@ public class UserRepository : IUserRepository
         return await _usersCollection.Find(_ => true).ToListAsync();
     }
 
-    public async Task<Users> GetUserById(Guid id)
+    public async Task<Users?> GetUserById(Guid id)
     {
         return await _usersCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
     }
 
-    public async Task<Users> GetUserByEmail(string email)
+    public async Task<Users?> GetUserByEmail(string email)
     {
         return await _usersCollection.Find(x => x.Email == email).FirstOrDefaultAsync();
     }
 
-    public async Task<Guid> NewUser(Users user)
+    public async Task<Users?> NewUser(Users user)
     {
+        if (user.Password == null)
+        {
+            return null;
+        }
         var hashPassword = Argon2.Hash(user.Password);
         user.Password = hashPassword;
         await _usersCollection.InsertOneAsync(user);
-        return user.Id;
+        return user;
     }
 
-    public async Task UpdateUser(Guid id, Users user)
+    public async Task<Users> UpdateUser(Guid id, Users user)
     {
         await _usersCollection.ReplaceOneAsync(x => x.Id == id, user, new ReplaceOptions()
         {
             IsUpsert = false,
         });
+        return user;
     }
 
-    public async Task UpdateUserPassword(Guid id, Users user)
+    public async Task<Users?> UpdateUserPassword(Guid id, Users user)
     {
+        if (user.Password == null)
+        {
+            return null;
+        }
         var hashPassword = Argon2.Hash(user.Password);
         user.Password = hashPassword;
         await _usersCollection.ReplaceOneAsync(x => x.Id == id, user, new ReplaceOptions()
         {
             IsUpsert = false,
         });
+        return user;
     }
 
     public async Task DeleteUser(Guid id)

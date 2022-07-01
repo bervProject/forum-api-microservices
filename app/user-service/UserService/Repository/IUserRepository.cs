@@ -5,10 +5,10 @@ using UserService.Model;
 public interface IUserRepository
 {
     Task<List<Users>> GetUsers();
-    Task<Users> GetUserById(Guid id);
-    Task<Users> GetUserByEmail(string email);
-    Task<Guid> NewUser(Users user);
-    Task UpdateUser(Guid id, Users user);
-    Task UpdateUserPassword(Guid id, Users user);
+    Task<Users?> GetUserById(Guid id);
+    Task<Users?> GetUserByEmail(string email);
+    Task<Users?> NewUser(Users user);
+    Task<Users> UpdateUser(Guid id, Users user);
+    Task<Users?> UpdateUserPassword(Guid id, Users user);
     Task DeleteUser(Guid id);
 }

@@ -29,7 +29,7 @@ services:
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: secretpass
-      ME_CONFIG_MONGODB_URL: mongodb://root:secretpass@mongo:27017/
+      ME_CONFIG_MONGODB_URL: mongodb://root:secretpass@mongodb:27017/
 
 volumes:
   redis-data:
