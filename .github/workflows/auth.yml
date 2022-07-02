@@ -1,21 +1,21 @@
-name: 'Auth Service CI'
+name: "Auth Service CI"
 
 on:
   pull_request:
     branches:
       - main
     paths:
-      - 'app/auth-service/**'
+      - "app/auth-service/**"
 
 jobs:
   build:
     runs-on: ubuntu-20.04
     defaults:
       run:
-        working-directory: 'app/auth-service'
+        working-directory: "app/auth-service"
     strategy:
       matrix:
-        node: [ 16, 18 ]
+        node: [16, 18]
     name: Build ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v3
