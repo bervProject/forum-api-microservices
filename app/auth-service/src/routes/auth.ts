@@ -5,6 +5,7 @@ import { getTokenRepository } from "../entities/token";
 import { generateToken, verifyToken } from "../services/token";
 import { getUser } from "../repositories/user";
 import constants from "../constants";
+import logger from "../logger";
 
 const failedLoginMessage = {
   message: "Failed to Login",
@@ -49,7 +50,7 @@ router.post("/login", async (req, res) => {
       return;
     }
   } catch (err) {
-    console.error(err);
+    logger.error("Error when verify token", err);
     res.statusCode = 401;
     res.json(failedLoginMessage);
     return;
@@ -106,7 +107,7 @@ router.post("/refresh", async (req, res) => {
     });
     return;
   } catch (err) {
-    console.error(err);
+    logger.error("Error when verify token", err);
     res.statusCode = 401;
     res.json(commonFailed);
     return;
@@ -130,7 +131,7 @@ router.post("/verify", async (req, res) => {
     });
     return;
   } catch (err) {
-    console.error(err);
+    logger.error("Error when verify token", err);
     res.statusCode = 401;
     res.json(commonFailed);
     return;

@@ -11,7 +11,9 @@ const getSecret = (tokenType: TokenType) => {
 };
 
 const getExp = (tokenType: TokenType) => {
-  return tokenType == "ACCESS_TOKEN" ? constants.defaultExpired : constants.defaultExpiredRefresh;
+  return tokenType == "ACCESS_TOKEN"
+    ? constants.defaultExpired
+    : constants.defaultExpiredRefresh;
 };
 
 export const generateToken = (
