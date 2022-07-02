@@ -13,7 +13,7 @@ jobs:
     defaults:
       run:
         working-directory: "app/user-service"
-    name: Build ${{ matrix.node }}
+    name: Build
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-dotnet@v2
