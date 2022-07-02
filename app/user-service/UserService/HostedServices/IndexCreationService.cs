@@ -1,7 +1,8 @@
 namespace UserService.HostedServices;
 
-using UserService.Model;
 using Redis.OM;
+
+using UserService.Model;
 
 public class IndexCreationService : IHostedService
 {

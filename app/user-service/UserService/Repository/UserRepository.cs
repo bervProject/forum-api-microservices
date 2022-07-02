@@ -1,9 +1,12 @@
 namespace UserService.Repository;
 
-using UserService.Model;
-using Microsoft.Extensions.Options;
-using MongoDB.Driver;
 using Isopoh.Cryptography.Argon2;
+
+using Microsoft.Extensions.Options;
+
+using MongoDB.Driver;
+
+using UserService.Model;
 
 public class UserRepository : IUserRepository
 {

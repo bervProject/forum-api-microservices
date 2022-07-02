@@ -1,6 +1,7 @@
 namespace UserService.Model;
 
 using System.ComponentModel.DataAnnotations;
+
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.IdGenerators;
 

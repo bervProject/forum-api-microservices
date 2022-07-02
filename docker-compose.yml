@@ -2,6 +2,7 @@ version: '3.9'
 services:
   redis:
     image: redis/redis-stack:6.2.2-v4
+    restart: always
     ports:
       - 6379:6379
       - 8001:8001
@@ -11,6 +12,7 @@ services:
       - backend
   mongodb:
     image: mongo:5
+    restart: always
     networks:
       - backend
     ports:
@@ -22,6 +24,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: secretpass
   mongo-express:
     image: mongo-express:latest
+    restart: always
     networks:
       - backend
     ports:

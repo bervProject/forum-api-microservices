@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+
+using Redis.OM;
+
+using UserService.HostedServices;
 using UserService.Model;
 using UserService.Repository;
 using UserService.Service;
-using Redis.OM;
-using UserService.HostedServices;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
