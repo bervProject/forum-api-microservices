@@ -22,4 +22,5 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
+      - run: yarn --frozen-lockfile
       - run: yarn compile
