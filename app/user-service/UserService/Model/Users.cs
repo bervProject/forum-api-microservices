@@ -7,7 +7,7 @@ using MongoDB.Bson.Serialization.IdGenerators;
 
 using Redis.OM.Modeling;
 
-[Document(StorageType = StorageType.Json)]
+[Document(StorageType = StorageType.Json, Prefixes = new []{"Users"})]
 public class Users
 {
     [BsonId(IdGenerator = typeof(CombGuidGenerator))]

@@ -9,9 +9,12 @@ using UserService.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
+builder.Services.AddHttpClient();
 builder.Services.AddSingleton(new RedisConnectionProvider(builder.Configuration["RedisConnectionString"]));
 builder.Services.Configure<ForumApiDatabaseSettings>(builder.Configuration.GetSection("ForumApiDatabase"));
+builder.Services.Configure<AuthServiceSettings>(builder.Configuration.GetSection("AuthServiceSettings"));
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
+builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddHostedService<IndexCreationService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -59,8 +62,19 @@ app.MapPost("/users", async ([FromServices] IUserServices userServices, [FromBod
 })
 .WithName("CreateUser");
 
-app.MapPut("/users", async ([FromServices] IUserServices userServices, [FromBody] UserUpdate user) =>
+app.MapPut("/users", async ([FromServices] IUserServices userServices, [FromServices] IAuthService authService, [FromBody] UserUpdate user, HttpRequest req) =>
 {
+    var bearerToken = req.Headers.Authorization.ToString();
+    var (success, id) = await authService.Verify(bearerToken);
+    if (!success)
+    {
+        return Results.Unauthorized();
+    }
+    if (id != user.Id)
+    {
+        return Results.Unauthorized();
+
+    }
     var result = await userServices.UpdateUser(user.Id, user);
     if (result == null)
     {
@@ -70,8 +84,19 @@ app.MapPut("/users", async ([FromServices] IUserServices userServices, [FromBody
 })
 .WithName("UpdateUser");
 
-app.MapPut("/users/password", async ([FromServices] IUserServices userServices, [FromBody] UserPassword user) =>
+app.MapPut("/users/password", async ([FromServices] IUserServices userServices, [FromServices] IAuthService authService, [FromBody] UserPassword user, HttpRequest req) =>
 {
+    var bearerToken = req.Headers.Authorization.ToString();
+    var (success, id) = await authService.Verify(bearerToken);
+    if (!success)
+    {
+        return Results.Unauthorized();
+    }
+    if (id != user.Id)
+    {
+        return Results.Unauthorized();
+
+    }
     var result = await userServices.UpdateUserPassword(user.Id, user);
     if (result == null)
     {
@@ -81,8 +106,19 @@ app.MapPut("/users/password", async ([FromServices] IUserServices userServices, 
 })
 .WithName("UpdateUserPassword");
 
-app.MapDelete("/users", async ([FromServices] IUserServices userServices, [FromBody] ById data) =>
+app.MapDelete("/users", async ([FromServices] IUserServices userServices, [FromServices] IAuthService authService, [FromBody] ById data, HttpRequest req) =>
 {
+    var bearerToken = req.Headers.Authorization.ToString();
+    var (success, id) = await authService.Verify(bearerToken);
+    if (!success)
+    {
+        return Results.Unauthorized();
+    }
+    if (id != data.Id)
+    {
+        return Results.Unauthorized();
+
+    }
     var result = await userServices.DeleteUser(data.Id);
     if (!result)
     {

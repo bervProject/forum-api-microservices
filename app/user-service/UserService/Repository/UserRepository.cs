@@ -49,6 +49,7 @@ public class UserRepository : IUserRepository
 
     public async Task<Users> UpdateUser(Guid id, Users user)
     {
+        user.Id = id;
         await _usersCollection.ReplaceOneAsync(x => x.Id == id, user, new ReplaceOptions()
         {
             IsUpsert = false,
@@ -62,6 +63,7 @@ public class UserRepository : IUserRepository
         {
             return null;
         }
+        user.Id = id;
         var hashPassword = Argon2.Hash(user.Password);
         user.Password = hashPassword;
         await _usersCollection.ReplaceOneAsync(x => x.Id == id, user, new ReplaceOptions()

@@ -76,15 +76,15 @@ public class UserServices : IUserServices
         }
         existing.Name = user.Name;
         var updatedUser = await _userRepository.UpdateUser(id, existing);
-        var exisingCache = await _userCache.Where(x => x.Id == id).FirstOrDefaultAsync();
-        if (exisingCache == null)
+        var existingCache = await _userCache.Where(x => x.Id == id).FirstOrDefaultAsync();
+        if (existingCache == null)
         {
             await _userCache.InsertAsync(updatedUser);
         }
         else
         {
-            exisingCache.Name = updatedUser.Name;
-            await _userCache.Update(exisingCache);
+            existingCache.Name = updatedUser.Name;
+            await _userCache.Update(existingCache);
         }
         return updatedUser;
     }
@@ -102,15 +102,15 @@ public class UserServices : IUserServices
         {
             return null;
         }
-        var exisingCache = await _userCache.Where(x => x.Id == id).FirstOrDefaultAsync();
-        if (exisingCache == null)
+        var existingCache = await _userCache.Where(x => x.Id == id).FirstOrDefaultAsync();
+        if (existingCache == null)
         {
             await _userCache.InsertAsync(updatedUser);
         }
         else
         {
-            exisingCache.Password = updatedUser.Password;
-            await _userCache.Update(exisingCache);
+            existingCache.Password = updatedUser.Password;
+            await _userCache.Update(existingCache);
         }
         return updatedUser;
     }
