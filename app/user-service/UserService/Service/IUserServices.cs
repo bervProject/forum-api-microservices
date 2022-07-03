@@ -7,8 +7,8 @@ public interface IUserServices
     Task<List<Users>> GetUsers();
     Task<Users?> GetUserById(Guid id);
     Task<Users?> GetUserByEmail(string email);
-    Task<Users?> NewUser(Users user);
-    Task<Users?> UpdateUser(Guid id, UserUpdate user);
-    Task<Users?> UpdateUserPassword(Guid id, UserPassword user);
-    Task<bool> DeleteUser(Guid id);
+    Task<IResult> NewUser(Users user);
+    Task<IResult> UpdateUser(Guid id, UserUpdate user, HttpRequest request);
+    Task<IResult> UpdateUserPassword(Guid id, UserPassword user, HttpRequest request);
+    Task<IResult> DeleteUser(Guid id, HttpRequest request);
 }

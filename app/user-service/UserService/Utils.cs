@@ -17,7 +17,8 @@ public static class Utils
         return arr;
     }
 
-    public static int GetHexVal(char hex) {
+    public static int GetHexVal(char hex)
+    {
         int val = (int)hex;
         return val - (val < 58 ? 48 : 87);
     }

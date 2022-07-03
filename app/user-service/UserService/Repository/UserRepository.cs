@@ -1,5 +1,7 @@
 namespace UserService.Repository;
 
+using System.Text.Json;
+
 using Isopoh.Cryptography.Argon2;
 
 using Microsoft.Extensions.Options;
@@ -12,9 +14,11 @@ public class UserRepository : IUserRepository
 {
 
     private readonly IMongoCollection<Users> _usersCollection;
+    private readonly ILogger<UserRepository> _logger;
 
-    public UserRepository(IOptions<ForumApiDatabaseSettings> forumApiDatabaseSettings)
+    public UserRepository(IOptions<ForumApiDatabaseSettings> forumApiDatabaseSettings, ILogger<UserRepository> logger)
     {
+        _logger = logger;
         var mongoClient = new MongoClient(forumApiDatabaseSettings.Value.ConnectionString);
         var mongoDatabase = mongoClient.GetDatabase(forumApiDatabaseSettings.Value.DatabaseName);
         _usersCollection = mongoDatabase.GetCollection<Users>(forumApiDatabaseSettings.Value.UsersCollectionName);
@@ -39,6 +43,7 @@ public class UserRepository : IUserRepository
     {
         if (user.Password == null)
         {
+            _logger.LogDebug("Didn't provide user Password when Create User. Data: {}", JsonSerializer.Serialize(user));
             return null;
         }
         var hashPassword = Argon2.Hash(user.Password);

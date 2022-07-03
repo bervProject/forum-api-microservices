@@ -1,3 +1,5 @@
+using AutoMapper;
+
 using Microsoft.AspNetCore.Mvc;
 
 using Redis.OM;
@@ -17,6 +19,8 @@ builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddHostedService<IndexCreationService>();
+// add Automapper
+builder.Services.AddAutoMapper(typeof(UserProfile));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -51,80 +55,28 @@ app.MapGet("/userByEmail/{email}", async ([FromServices] IUserServices userServi
 })
 .WithName("GetUserByEmail");
 
-app.MapPost("/users", async ([FromServices] IUserServices userServices, [FromBody] Users user) =>
+app.MapPost("/users", async ([FromServices] IUserServices userServices, [FromServices] IMapper mapper, [FromBody] UserCreation userCreation) =>
 {
-    var createdUser = await userServices.NewUser(user);
-    if (createdUser == null)
-    {
-        return Results.BadRequest(new { Message = "User Exists" });
-    }
-    return Results.Json(new { Message = "Created", User = createdUser });
+    var user = mapper.Map<Users>(userCreation);
+    return await userServices.NewUser(user);
 })
 .WithName("CreateUser");
 
-app.MapPut("/users", async ([FromServices] IUserServices userServices, [FromServices] IAuthService authService, [FromBody] UserUpdate user, HttpRequest req) =>
+app.MapPut("/users", async ([FromServices] IUserServices userServices, [FromBody] UserUpdate user, HttpRequest req) =>
 {
-    var bearerToken = req.Headers.Authorization.ToString();
-    var (success, id) = await authService.Verify(bearerToken);
-    if (!success)
-    {
-        return Results.Unauthorized();
-    }
-    if (id != user.Id)
-    {
-        return Results.Unauthorized();
-
-    }
-    var result = await userServices.UpdateUser(user.Id, user);
-    if (result == null)
-    {
-        return Results.NotFound(new { Message = "User Not Found" });
-    }
-    return Results.Json(new { Message = "Updated", User = result });
+    return await userServices.UpdateUser(user.Id, user, req);
 })
 .WithName("UpdateUser");
 
-app.MapPut("/users/password", async ([FromServices] IUserServices userServices, [FromServices] IAuthService authService, [FromBody] UserPassword user, HttpRequest req) =>
+app.MapPut("/users/password", async ([FromServices] IUserServices userServices, [FromBody] UserPassword user, HttpRequest req) =>
 {
-    var bearerToken = req.Headers.Authorization.ToString();
-    var (success, id) = await authService.Verify(bearerToken);
-    if (!success)
-    {
-        return Results.Unauthorized();
-    }
-    if (id != user.Id)
-    {
-        return Results.Unauthorized();
-
-    }
-    var result = await userServices.UpdateUserPassword(user.Id, user);
-    if (result == null)
-    {
-        return Results.NotFound(new { Message = "User Not Found" });
-    }
-    return Results.Json(new { Message = "Updated", User = result });
+    return await userServices.UpdateUserPassword(user.Id, user, req);
 })
 .WithName("UpdateUserPassword");
 
-app.MapDelete("/users", async ([FromServices] IUserServices userServices, [FromServices] IAuthService authService, [FromBody] ById data, HttpRequest req) =>
+app.MapDelete("/users", async ([FromServices] IUserServices userServices, [FromBody] ById data, HttpRequest req) =>
 {
-    var bearerToken = req.Headers.Authorization.ToString();
-    var (success, id) = await authService.Verify(bearerToken);
-    if (!success)
-    {
-        return Results.Unauthorized();
-    }
-    if (id != data.Id)
-    {
-        return Results.Unauthorized();
-
-    }
-    var result = await userServices.DeleteUser(data.Id);
-    if (!result)
-    {
-        return Results.NotFound(new { Message = "User Not Found" });
-    }
-    return Results.Json(new { Message = "Deleted" });
+    return await userServices.DeleteUser(data.Id, req);
 })
 .WithName("DeleteUser");
 
