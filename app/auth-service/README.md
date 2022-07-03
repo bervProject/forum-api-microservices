@@ -1,12 +1,25 @@
-# forum-api-microservices
+# Auth Service
 
-Forum API Microservices
+## Setup
 
-## Directory Structure
+* Run `yarn` or `npm install`
 
-* [/app](/app/) : Microservices Source Code
-    * Currently we have [Auth Service](/app/auth-service/), [User Service](/app/user-service/), and [Thread Service](/app/thread-service/).
-* [docker-compose.yml](docker-compose.yml) : Containerize MongoDB & Redis. Will help for development.
+## Linter
+
+* Run `yarn lint`. To fix: `yarn lint --fix`.
+
+## Development Mode
+
+* Setup `env`. If you are using Linux or MacOS, you may copy `.env.example` to `.env.sh` and run `source .env.sh` to load the environment.
+* Run `yarn start:dev` or `npm run start:dev`
+
+## Run in Production
+
+* Build `.js` file using `yarn compile` or `npm run compile`
+* Setup `env`. If you are using Linux or MacOS, you may copy `.env.example` to `.env.sh` and run `source .env.sh` to load the environment.
+* Run `yarn start`. You may use `pm2` as alternative to run in production and setup the env. Learn more [here](https://pm2.keymetrics.io/docs/usage/quick-start/).
+
+**Note**: You may use `Dockerfile` if you wish to host this service in containerize environment.
 
 ## License
 
@@ -34,5 +47,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
 ```
