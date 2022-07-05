@@ -97,7 +97,7 @@ public class UserServices : IUserServices
         else
         {
             existingCache.Name = updatedUser.Name;
-            await _userCache.Update(existingCache);
+            await _userCache.UpdateAsync(existingCache);
         }
         return Results.Json(new { Message = "Updated", User = existing });
     }
@@ -128,7 +128,7 @@ public class UserServices : IUserServices
         else
         {
             existingCache.Password = updatedUser.Password;
-            await _userCache.Update(existingCache);
+            await _userCache.UpdateAsync(existingCache);
         }
         return Results.Json(new { Message = "Updated", User = updatedUser });
     }
@@ -146,7 +146,7 @@ public class UserServices : IUserServices
             return Results.NotFound(new { Message = "User Not Found" });
         }
         await _userRepository.DeleteUser(id);
-        await _userCache.Delete(existing);
+        await _userCache.DeleteAsync(existing);
         return Results.Json(new { Message = "Deleted" });
     }
 
