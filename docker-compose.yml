@@ -33,6 +33,38 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: secretpass
       ME_CONFIG_MONGODB_URL: mongodb://root:secretpass@mongodb:27017/
+  user-services:
+    build: ./app/user-service
+    networks:
+      - backend
+    ports:
+      - 9000:80
+    environment:
+      ForumApiDatabase__ConnectionString: mongodb://root:secretpass@mongodb:27017
+      RedisConnectionString: redis://redis:6379
+      AuthServiceSettings__AuthServiceVerify: http://auth-services:9001/auth/verify
+  auth-services:
+    build: ./app/auth-service
+    networks:
+      - backend
+    environment:
+      NODE_ENV: production
+      REDIS_CONNECTION_STRING: redis://redis:6379
+      MONGO_CONNECTION_STRING: mongodb://root:secretpass@mongodb:27017
+      PORT: 5000
+    ports:
+      - 9001:5000
+  thread-services:
+    build: ./app/thread-service
+    networks:
+      - backend
+    environment:
+      ForumApiDatabase__ConnectionString: mongodb://root:secretpass@mongodb:27017
+      RedisConnectionString: redis://redis:6379
+      AuthServiceSettings__AuthServiceVerify: http://auth-services:9001/auth/verify
+    ports:
+      - 9001:80
+
 
 volumes:
   redis-data:
