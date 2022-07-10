@@ -63,7 +63,7 @@ services:
       RedisConnectionString: redis://redis:6379
       AuthServiceSettings__AuthServiceVerify: http://auth-services:9001/auth/verify
     ports:
-      - 9001:80
+      - 9002:80
 
 
 volumes:
