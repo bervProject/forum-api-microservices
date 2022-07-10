@@ -42,7 +42,7 @@ services:
     environment:
       ForumApiDatabase__ConnectionString: mongodb://root:secretpass@mongodb:27017
       RedisConnectionString: redis://redis:6379
-      AuthServiceSettings__AuthServiceVerify: http://auth-services:9001/auth/verify
+      AuthServiceSettings__AuthServiceVerify: http://auth-services:5000/auth/verify
   auth-services:
     build: ./app/auth-service
     networks:
@@ -61,7 +61,7 @@ services:
     environment:
       ForumApiDatabase__ConnectionString: mongodb://root:secretpass@mongodb:27017
       RedisConnectionString: redis://redis:6379
-      AuthServiceSettings__AuthServiceVerify: http://auth-services:9001/auth/verify
+      AuthServiceSettings__AuthServiceVerify: http://auth-services:5000/auth/verify
     ports:
       - 9002:80
 

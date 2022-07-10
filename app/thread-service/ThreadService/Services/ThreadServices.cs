@@ -9,101 +9,86 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 
 using ThreadService.Model;
-
+using ThreadService.Repository;
 
 public class ThreadServices : IThreadServices
 {
-    private readonly IMongoCollection<Users> _usersCollection;
-    private readonly IMongoCollection<Threads> _threadsCollection;
+    private readonly IThreadRepository _threadRepository;
+    private readonly IAuthService _authService;
+
     private readonly ILogger<ThreadServices> _logger;
 
-    public ThreadServices(IOptions<ForumApiDatabaseSettings> forumApiDatabaseSettings, ILogger<ThreadServices> logger)
+    public ThreadServices(IThreadRepository threadRepository, IAuthService authService, ILogger<ThreadServices> logger)
     {
         _logger = logger;
-        var mongoClient = new MongoClient(forumApiDatabaseSettings.Value.ConnectionString);
-        var mongoDatabase = mongoClient.GetDatabase(forumApiDatabaseSettings.Value.DatabaseName);
-        _usersCollection = mongoDatabase.GetCollection<Users>(forumApiDatabaseSettings.Value.UsersCollectionName);
-        _threadsCollection = mongoDatabase.GetCollection<Threads>(forumApiDatabaseSettings.Value.ThreadsCollectionName);
+        _threadRepository = threadRepository;
+        _authService = authService;
     }
 
     public async Task<List<Threads>> GetThreads(Paginated paginated)
     {
-        var filter = new BsonDocument();
-        var skip = paginated.Page * paginated.Limit;
-        var threads = await _threadsCollection.Find(filter).Skip(skip).Limit(paginated.Limit).ToListAsync();
-        return await populateThreads(threads);
+        return await _threadRepository.GetThreads(paginated);
     }
 
     public async Task<List<Threads>> SearchThreads(string keyword)
     {
-        var searchFilter = Builders<Threads>.Filter.Text(keyword, new TextSearchOptions
-        {
-            CaseSensitive = false,
-        });
-        var threads = await _threadsCollection.Find(searchFilter).ToListAsync();
-        return await populateThreads(threads);
+        return await _threadRepository.SearchThreads(keyword);
     }
 
 
     public async Task<Threads?> GetThreadById(Guid id)
     {
-        var thread = await _threadsCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
-        return await populateThread(thread);
+        return await _threadRepository.GetThreadById(id);
     }
 
     public async Task<List<Threads>> GetThreadsByUserId(Guid userId)
     {
-        var threads = await _threadsCollection.Find(x => x.AuthorId == userId).ToListAsync();
-        return await populateThreads(threads);
+        return await _threadRepository.GetThreadsByUserId(userId);
     }
 
-    public async Task<Threads?> Insert(Threads thread)
+    public async Task<IResult> Insert(Threads thread, HttpRequest request)
     {
         try
         {
-            await _threadsCollection.InsertOneAsync(thread);
-            return thread;
+            var bearerToken = request.Headers.Authorization.ToString();
+            var (success, id) = await _authService.Verify(bearerToken);
+            if (!success)
+            {
+                return Results.Unauthorized();
+            }
+            thread.AuthorId = id;
+            var threadData = await _threadRepository.Insert(thread);
+            return Results.Ok(threadData);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error when insert new thread.");
-            return null;
+            return Results.BadRequest();
         }
     }
 
     public async Task<Threads?> Update(Guid id, Threads thread)
     {
-        await _threadsCollection.ReplaceOneAsync(x => x.Id == id, thread, new ReplaceOptions
-        {
-            IsUpsert = false,
-        });
-        return thread;
+        return await _threadRepository.Update(id, thread);
     }
 
     public async Task Delete(Guid id)
     {
-        await _threadsCollection.DeleteOneAsync(x => x.Id == id);
+        await _threadRepository.Delete(id);
     }
 
-    private async Task<List<Threads>> populateThreads(List<Threads> threads)
+    private async Task<IResult?> verifyUserAccess(HttpRequest request, Guid userId)
     {
-        var userIds = threads.Select(x => x.AuthorId);
-        var users = await _usersCollection.Find(x => userIds.Contains(x.Id)).ToListAsync();
-        return threads.Select(x =>
+        var bearerToken = request.Headers.Authorization.ToString();
+        var (success, id) = await _authService.Verify(bearerToken);
+        if (!success)
         {
-            x.User = users.Find(user => user.Id == x.Id);
-            return x;
-        }).ToList();
-    }
-
-    private async Task<Threads?> populateThread(Threads? thread)
-    {
-        if (thread == null)
-        {
-            return null;
+            return Results.Unauthorized();
         }
-        var user = await _usersCollection.Find(x => thread.AuthorId == x.Id).FirstAsync();
-        thread.User = user;
-        return thread;
+        if (id != userId)
+        {
+            return Results.Unauthorized();
+        }
+        return null;
     }
 }

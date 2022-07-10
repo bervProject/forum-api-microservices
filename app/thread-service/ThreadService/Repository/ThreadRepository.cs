@@ -4,6 +4,7 @@ namespace ThreadService.Repository;
 using System.Collections.Generic;
 
 using Microsoft.Extensions.Options;
+using Microsoft.VisualBasic;
 
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -28,9 +29,8 @@ public class ThreadRepository : IThreadRepository
 
     public async Task<List<Threads>> GetThreads(Paginated paginated)
     {
-        var filter = new BsonDocument();
         var skip = paginated.Page * paginated.Limit;
-        var threads = await _threadsCollection.Find(filter).Skip(skip).Limit(paginated.Limit).ToListAsync();
+        var threads = await _threadsCollection.Find(_ => true).Skip(skip).Limit(paginated.Limit).ToListAsync();
         return await populateThreads(threads);
     }
 
@@ -87,11 +87,13 @@ public class ThreadRepository : IThreadRepository
 
     private async Task<List<Threads>> populateThreads(List<Threads> threads)
     {
-        var userIds = threads.Select(x => x.AuthorId);
-        var users = await _usersCollection.Find(x => userIds.Contains(x.Id)).ToListAsync();
+        var userIds = threads.Select(x => x.AuthorId).Distinct();
+        var filter = Builders<Users>.Filter.In(x => x.Id, userIds);
+        var users = await _usersCollection.Find(filter).ToListAsync();
+        _logger.LogDebug(string.Join(",", users));
         return threads.Select(x =>
         {
-            x.User = users.Find(user => user.Id == x.Id);
+            x.User = users.Find(user => user.Id == x.AuthorId);
             return x;
         }).ToList();
     }

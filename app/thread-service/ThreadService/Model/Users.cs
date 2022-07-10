@@ -7,6 +7,7 @@ using MongoDB.Bson.Serialization.IdGenerators;
 
 using Redis.OM.Modeling;
 
+[BsonIgnoreExtraElements]
 [Document(StorageType = StorageType.Json, Prefixes = new[] { "Users" }, IndexName = "users-idx")]
 public class Users
 {

@@ -15,8 +15,11 @@ builder.Services.AddCors(options =>
                           policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
                       });
 });
+builder.Services.AddHttpClient();
 builder.Services.Configure<ForumApiDatabaseSettings>(builder.Configuration.GetSection("ForumApiDatabase"));
+builder.Services.Configure<AuthServiceSettings>(builder.Configuration.GetSection("AuthServiceSettings"));
 builder.Services.AddSingleton<IThreadRepository, ThreadRepository>();
+builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddScoped<IThreadServices, ThreadServices>();
 builder.Services.AddHostedService<IndexCreationService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -64,9 +67,9 @@ app.MapGet("/threads/user/{id}", async ([FromServices] IThreadServices threadSer
 })
 .WithName("GetThreadByUserId");
 
-app.MapPost("/threads", async ([FromServices] IThreadServices threadServices, Threads thread) =>
+app.MapPost("/threads", async ([FromServices] IThreadServices threadServices, Threads thread, HttpRequest request) =>
 {
-    return await threadServices.Insert(thread);
+    return await threadServices.Insert(thread, request);
 })
 .WithName("CreateThread");
 
