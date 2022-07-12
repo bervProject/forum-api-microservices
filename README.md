@@ -8,6 +8,21 @@ Forum API Microservices
     * Currently we have [Auth Service](/app/auth-service/), [User Service](/app/user-service/), and [Thread Service](/app/thread-service/).
 * [docker-compose.yml](docker-compose.yml) : Containerize MongoDB & Redis. Will help for development.
 
+## Microservices Development
+
+* You will need to copy or modify `docker-compose.yml` to ignore the deployment of microservices.
+* Run Redis & MongoDB using `docker compose up -d`.
+* Go to the microservice you want to update and read the README.md of each directory to understand how to run them.
+
+## Development
+
+* Build Images of Microservices: `docker compose build`
+* Run all: `docker compose up -d`
+
+## Software Architecture
+
+![Software Architecture](docs/imgs/arch.jpeg)
+
 ## License
 
 MIT
