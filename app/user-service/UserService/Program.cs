@@ -1,9 +1,13 @@
-using AutoMapper;
+using System.Diagnostics;
+using System.Reflection.PortableExecutable;
 
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Redis.OM;
-
 using UserService.HostedServices;
 using UserService.Model;
 using UserService.Repository;
@@ -28,6 +32,15 @@ builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddHostedService<IndexCreationService>();
 // add Automapper
 builder.Services.AddAutoMapper(typeof(UserProfile));
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracerProviderBuilder =>
+        tracerProviderBuilder
+            .AddSource(DiagnosticsConfig.ActivitySource.Name)
+            .ConfigureResource(resource => resource
+                .AddService(DiagnosticsConfig.ServiceName))
+            .AddHttpClientInstrumentation()
+            .AddAspNetCoreInstrumentation()
+            .AddJaegerExporter());
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -43,6 +56,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("trace-id", Activity.Current?.TraceId.ToString());
+    await next();
+});
 
 app.MapGet("/users", async ([FromServices] IUserServices userServices) =>
 {
@@ -88,3 +107,9 @@ app.MapDelete("/users", async ([FromServices] IUserServices userServices, [FromB
 .WithName("DeleteUser");
 
 app.Run();
+
+public static class DiagnosticsConfig
+{
+    public const string ServiceName = "UserService";
+    public static ActivitySource ActivitySource = new ActivitySource(ServiceName);
+}

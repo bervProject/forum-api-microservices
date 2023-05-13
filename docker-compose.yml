@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   redis:
-    image: redis/redis-stack:6.2.2-v4
+    image: redis/redis-stack:6.2.6-v7
     restart: always
     ports:
       - 6379:6379
@@ -22,6 +22,24 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: secretpass
+  jaeger:
+    image: jaegertracing/all-in-one:1.45
+    networks:
+      - backend
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - 6831:6831/udp
+      - 6832:6832/udp
+      - 5778:5778
+      - 16686:16686
+      - 14268:14268
+      - 14269:14269
+      - 14250:14250
+      - 9411:9411
+      - 4317:4317
+      - 4318:4318
   mongo-express:
     image: mongo-express:latest
     restart: always
@@ -37,34 +55,50 @@ services:
     build: ./app/user-service
     networks:
       - backend
+    depends_on:
+      - jaeger
+      - mongodb
+      - redis
     ports:
       - 9000:80
     environment:
       ForumApiDatabase__ConnectionString: mongodb://root:secretpass@mongodb:27017
       RedisConnectionString: redis://redis:6379
       AuthServiceSettings__AuthServiceVerify: http://auth-services:5000/auth/verify
+      OTEL_EXPORTER_JAEGER_ENDPOINT: http://jaeger:14268/api/traces
+      OTEL_EXPORTER_JAEGER_AGENT_HOST: jaeger
   auth-services:
     build: ./app/auth-service
     networks:
       - backend
+    depends_on:
+      - jaeger
+      - mongodb
+      - redis
     environment:
       NODE_ENV: production
       REDIS_CONNECTION_STRING: redis://redis:6379
       MONGO_CONNECTION_STRING: mongodb://root:secretpass@mongodb:27017
       PORT: 5000
+      JAEGER_URI: http://jaeger:4318
     ports:
       - 9001:5000
   thread-services:
     build: ./app/thread-service
     networks:
       - backend
+    depends_on:
+      - jaeger
+      - mongodb
+      - redis
     environment:
       ForumApiDatabase__ConnectionString: mongodb://root:secretpass@mongodb:27017
       RedisConnectionString: redis://redis:6379
       AuthServiceSettings__AuthServiceVerify: http://auth-services:5000/auth/verify
+      OTEL_EXPORTER_JAEGER_ENDPOINT: http://jaeger:14268/api/traces
+      OTEL_EXPORTER_JAEGER_AGENT_HOST: jaeger
     ports:
       - 9002:80
-
 
 volumes:
   redis-data:
