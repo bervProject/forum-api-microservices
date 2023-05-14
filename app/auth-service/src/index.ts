@@ -1,5 +1,6 @@
 import express from "express";
 import cors from 'cors';
+import api from '@opentelemetry/api';
 import { router as authRouter } from "./routes/auth";
 import { getTokenRepository } from "./entities/token";
 import logger from "./logger";
@@ -25,6 +26,10 @@ app.use((req, res, next) => {
     query: req.query,
     params: req.params,
   };
+
+  // set tracing header
+  const activeSpan = api.trace.getSpan(api.context.active());
+  res.header("trace-id", activeSpan?.spanContext().traceId);
 
   logger.info("Getting Request", requestMeta);
   next();

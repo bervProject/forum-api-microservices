@@ -1,5 +1,8 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using ThreadService.HostedServices;
 using ThreadService.Model;
 using ThreadService.Repository;
@@ -22,6 +25,15 @@ builder.Services.AddSingleton<IThreadRepository, ThreadRepository>();
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddScoped<IThreadServices, ThreadServices>();
 builder.Services.AddHostedService<IndexCreationService>();
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracerProviderBuilder =>
+        tracerProviderBuilder
+            .AddSource(DiagnosticsConfig.ActivitySource.Name)
+            .ConfigureResource(resource => resource
+                .AddService(DiagnosticsConfig.ServiceName))
+            .AddHttpClientInstrumentation()
+            .AddAspNetCoreInstrumentation()
+            .AddJaegerExporter());
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -37,6 +49,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors();
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Add("trace-id", Activity.Current?.TraceId.ToString());
+    await next();
+});
 
 app.MapGet("/threads", async ([FromServices] IThreadServices threadServices, [FromQuery] int limit, [FromQuery] int page) =>
 {
@@ -87,3 +105,9 @@ app.MapDelete("/threads/{id}", async ([FromServices] IThreadServices threadServi
 .WithName("DeleteThread");
 
 app.Run();
+
+public static class DiagnosticsConfig
+{
+    public const string ServiceName = "ThreadService";
+    public static ActivitySource ActivitySource = new ActivitySource(ServiceName);
+}

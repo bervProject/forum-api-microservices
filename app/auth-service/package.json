@@ -7,13 +7,20 @@
   "author": "Bervianto Leo Pratama",
   "license": "MIT",
   "scripts": {
-    "start": "node lib/index.js",
-    "start:dev": "ts-node-dev src/index.ts",
+    "start": "node --require ./lib/instrumentation.js lib/index.js",
+    "start:dev": "ts-node-dev --require ./instrumentation.ts src/index.ts",
     "compile": "tsc",
     "lint": "eslint .",
     "fix": "eslint . --fix"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.4.1",
+    "@opentelemetry/exporter-metrics-otlp-proto": "^0.39.1",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.39.1",
+    "@opentelemetry/instrumentation-express": "^0.32.2",
+    "@opentelemetry/instrumentation-http": "^0.39.1",
+    "@opentelemetry/sdk-metrics": "^1.13.0",
+    "@opentelemetry/sdk-node": "^0.39.1",
     "argon2": "^0.28.5",
     "cors": "^2.8.5",
     "express": "^4.18.1",
