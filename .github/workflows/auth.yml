@@ -15,7 +15,7 @@ jobs:
         working-directory: "app/auth-service"
     strategy:
       matrix:
-        node: [18, 20]
+        node: [20, 22]
     name: Build ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v4
