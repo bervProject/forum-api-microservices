@@ -23,3 +23,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+
+# Maintain dependencies for Docker Compose
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "weekly"
