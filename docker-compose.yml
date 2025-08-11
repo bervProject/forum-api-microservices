@@ -23,7 +23,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: secretpass
   jaeger:
-    image: jaegertracing/all-in-one:1.71.0
+    image: jaegertracing/all-in-one:1.72.0
     networks:
       - backend
     environment:
