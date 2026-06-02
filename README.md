@@ -23,6 +23,48 @@ Forum API Microservices
 
 ![Software Architecture](docs/imgs/arch.jpeg)
 
+## Vagrant Sample
+
+### Provider - Virtual Box
+
+```mermaid
+architecture-beta
+    group vm(server)[Virtual Machine]
+
+    group docker(cloud)[Docker] in vm
+
+    service sv1(server)[Service 1] in docker
+    service sv2(server)[Service 2] in docker
+    service db1(database)[Database 1] in docker
+    service db2(database)[Database 2] in docker
+    service redis(database)[Cache] in docker
+
+    sv1:B -- T:db1
+    sv2:B -- T:db2
+    sv1:R -- L:redis
+    sv2:L -- R:redis
+```
+
+### Docker without Vagrant
+
+```mermaid
+architecture-beta
+
+    group docker(cloud)[Docker]
+
+    service sv1(server)[Service 1] in docker
+    service sv2(server)[Service 2] in docker
+    service db1(database)[Database 1] in docker
+    service db2(database)[Database 2] in docker
+    service redis(database)[Cache] in docker
+
+    sv1:B -- T:db1
+    sv2:B -- T:db2
+    sv1:R -- L:redis
+    sv2:L -- R:redis
+```
+
+
 ## License
 
 MIT
