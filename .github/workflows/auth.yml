@@ -9,13 +9,13 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: "app/auth-service"
     strategy:
       matrix:
-        node: [20, 22]
+        node: [24, 26]
     name: Build ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v6
